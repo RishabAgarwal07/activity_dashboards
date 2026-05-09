@@ -1,0 +1,16 @@
+bronze:
+  logger_name: "bronze_logger"
+  log_level: "INFO"
+  log_file: "logs/pipeline_{}.log"
+silver:
+  logger_name: "silver_logger"
+  log_level: "INFO"
+  log_file: "logs/pipeline_{}.log"
+gold:
+  logger_name: "gold_logger"
+  log_level: "INFO"
+  log_file: "pipeline_{}.log"
+pipeline:
+  logger_name: "data_pipeline"
+  log_level: "INFO"
+  log_file: "logs/pipeline_{}.log"
