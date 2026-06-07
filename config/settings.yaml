@@ -1,3 +1,4 @@
+# Logging configurations
 bronze:
   logger_name: "bronze_logger"
   log_level: "INFO"
@@ -14,3 +15,15 @@ pipeline:
   logger_name: "data_pipeline"
   log_level: "INFO"
   log_file: "logs/pipeline_{}.log"
+
+# Input/Output Configurations
+storage_loc:
+  raw: "data/raw"
+  bronze: "data/bronze"
+  silver: "data/silver"
+  gold: "data/gold"
+  failed: "data/failed"
+
+# Other Pipeline Configurations
+max_retries: 3
+retry_delay: 5 # seconds
