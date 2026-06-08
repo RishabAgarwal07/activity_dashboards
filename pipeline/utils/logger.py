@@ -5,26 +5,35 @@ allowing for consistent and structured logging throughout the codebase.
 """
 
 import logging
+from datetime import date
+from config import LOG_LEVEL, LOG_FILE
 
-class Logger:
-    """
-    A Logger class that encapsulates the logging configuration for the pipeline.
-    """
-    def __init__(self, logger_name:str, log_level, log_file:str):
-        self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(log_level)
+def get_logger(name: str) -> logging.Logger:
 
-        # Create a file handler for logging to a file
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(log_level)
+    logger = logging.getLogger(name)
 
-        # Create a formatter and set it for the handler
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-        file_handler.setFormatter(formatter)
+    if logger.handlers:
+        return logger
+    
+    logger.setLevel(LOG_LEVEL)
 
-        # Add the handler to the logger
-        self.logger.addHandler(file_handler)
+    log_file = LOG_FILE.format(date=date.today().strftime("%Y-%m-%d"))
+    Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(LOG_LEVEL)
 
-    def get_logger(self):
-        """Returns the configured logger instance."""
-        return self.logger
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(LOG_LEVEL)
+
+    # --- Formatter ---
+    formatter = logging.Formatter(
+        "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    return logger
