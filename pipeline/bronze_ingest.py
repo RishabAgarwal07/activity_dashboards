@@ -1,5 +1,5 @@
-from utils.logger import get_logger
-from config import RAW_PATH, BRONZE_PATH, BATCH_SIZE, MAX_MAP_POINTS
+from pipeline.utils.logger import get_logger
+from config.config import RAW_PATH, BRONZE_PATH, BATCH_SIZE, MAX_MAP_POINTS
 
 logger = get_logger(__name__)
 
