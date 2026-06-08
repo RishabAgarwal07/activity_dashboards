@@ -1,18 +1,5 @@
 # Logging configurations
-bronze:
-  logger_name: "bronze_logger"
-  log_level: "INFO"
-  log_file: "logs/pipeline_{}.log"
-silver:
-  logger_name: "silver_logger"
-  log_level: "INFO"
-  log_file: "logs/pipeline_{}.log"
-gold:
-  logger_name: "gold_logger"
-  log_level: "INFO"
-  log_file: "pipeline_{}.log"
-pipeline:
-  logger_name: "data_pipeline"
+logging:
   log_level: "INFO"
   log_file: "logs/pipeline_{}.log"
 
@@ -27,3 +14,5 @@ storage_loc:
 # Other Pipeline Configurations
 max_retries: 3
 retry_delay: 5 # seconds
+batch_size: 100
+max_map_points: 2000
