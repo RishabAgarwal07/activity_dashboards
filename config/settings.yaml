@@ -1,7 +1,7 @@
 # Logging configurations
 logging:
   log_level: "INFO"
-  log_file: "logs/pipeline_{}.log"
+  log_file: "logs/pipeline_{date}.log"
 
 # Input/Output Configurations
 storage_loc:

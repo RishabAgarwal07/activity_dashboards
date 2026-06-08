@@ -13,10 +13,10 @@ SILVER_PATH = ROOT / _cfg["storage_loc"]["silver"]
 GOLD_PATH = ROOT / _cfg["storage_loc"]["gold"]
 FAILED_PATH = ROOT / _cfg["storage_loc"]["failed"]
 
-MAX_RETRIES = ROOT / _cfg["max_retries"]
-RETRY_DELAY = ROOT / _cfg["retry_delay"]
-BATCH_SIZE = ROOT / _cfg["batch_size"]
-MAX_MAP_POINTS = ROOT / _cfg["max_map_points"]
+MAX_RETRIES = _cfg["max_retries"]
+RETRY_DELAY = _cfg["retry_delay"]
+BATCH_SIZE = _cfg["batch_size"]
+MAX_MAP_POINTS = _cfg["max_map_points"]
 
-LOG_LEVEL = ROOT / _cfg["logging"]["log_level"]
-LOG_FILE = ROOT / _cfg["logging"]["log_file"]
+LOG_LEVEL = _cfg["logging"]["log_level"]
+LOG_FILE = str(ROOT / _cfg["logging"]["log_file"])

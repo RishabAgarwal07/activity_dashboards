@@ -5,8 +5,9 @@ allowing for consistent and structured logging throughout the codebase.
 """
 
 import logging
+from pathlib import Path
 from datetime import date
-from config import LOG_LEVEL, LOG_FILE
+from config.config import LOG_LEVEL, LOG_FILE
 
 def get_logger(name: str) -> logging.Logger:
 
@@ -14,7 +15,7 @@ def get_logger(name: str) -> logging.Logger:
 
     if logger.handlers:
         return logger
-    
+
     logger.setLevel(LOG_LEVEL)
 
     log_file = LOG_FILE.format(date=date.today().strftime("%Y-%m-%d"))
