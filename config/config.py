@@ -20,3 +20,6 @@ MAX_MAP_POINTS = _cfg["max_map_points"]
 
 LOG_LEVEL = _cfg["logging"]["log_level"]
 LOG_FILE = str(ROOT / _cfg["logging"]["log_file"])
+
+D = _cfg["d"]
+GPXTPX = _cfg["gpxtpx"]

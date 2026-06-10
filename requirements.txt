@@ -5,8 +5,9 @@
 
 # --- Parsing ---
 gpxpy==1.6.2          # GPX file parsing
-fitparse       # FIT binary file parsing
+fitparse              # FIT binary file parsing
 python-magic==0.4.27  # Auto-detect file type inside GZ archives
+lxml                  # XML parsing for GPX files
 
 # --- Data Processing ---
 pandas==2.2.3
