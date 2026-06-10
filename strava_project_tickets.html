@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strava Project — Ticket Board</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #18181c;
+    --surface2: #222228;
+    --border: #2e2e38;
+    --border2: #3a3a48;
+    --text: #e8e8f0;
+    --muted: #7a7a92;
+    --dim: #4a4a62;
+
+    --bronze: #e8853a;
+    --bronze-dim: #3a2010;
+    --silver: #8a9ab8;
+    --silver-dim: #1a2030;
+    --gold: #d4aa3a;
+    --gold-dim: #2e2508;
+    --infra: #7a6ed4;
+    --infra-dim: #1e1a3a;
+    --dashboard: #5ab89a;
+    --dashboard-dim: #0e2820;
+    --advanced: #c85878;
+    --advanced-dim: #2e1018;
+
+    --p1: #e85858;
+    --p2: #e8a838;
+    --p3: #5898e8;
+    --radius: 6px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bronze);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-sep { width: 1px; height: 20px; background: var(--border2); }
+  .header-title { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+  .header-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .total-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-label { font-size: 11px; color: var(--dim); font-family: var(--mono); margin-right: 4px; }
+  .filter-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--text); color: var(--text); }
+  .filter-btn.active { border-color: var(--bronze); color: var(--bronze); background: var(--bronze-dim); }
+  .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+
+  /* ── EPIC LEGEND ── */
+  .legend {
+    padding: 12px 32px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── MAIN ── */
+  main { padding: 28px 32px; max-width: 1400px; }
+
+  /* ── EPICS ── */
+  .epic {
+    margin-bottom: 48px;
+  }
+  .epic-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .epic-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+  }
+  .epic-title { font-size: 15px; font-weight: 500; }
+  .epic-desc { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .epic-count { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+  /* ── SPRINT GROUPS ── */
+  .sprint-group { margin-bottom: 24px; }
+  .sprint-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sprint-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── TICKETS ── */
+  .tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
+
+  .ticket {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .ticket::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .ticket:hover { border-color: var(--border2); background: var(--surface2); }
+  .ticket.open .ticket-body { display: block; }
+
+  .ticket-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .ticket-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dim);
+    flex-shrink: 0;
+    padding-top: 1px;
+    min-width: 60px;
+  }
+  .ticket-title {
+    font-size: 13px;
+    font-weight: 500;
+    flex: 1;
+    line-height: 1.4;
+  }
+  .ticket-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 10px;
+    padding-left: 70px;
+  }
+  .priority {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+  .p1 { background: rgba(232,88,88,0.15); color: var(--p1); }
+  .p2 { background: rgba(232,168,56,0.15); color: var(--p2); }
+  .p3 { background: rgba(88,152,232,0.15); color: var(--p3); }
+
+  .type-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .effort {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dim);
+    margin-left: auto;
+  }
+  .effort span { color: var(--muted); }
+
+  /* body detail */
+  .ticket-body {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    padding-left: 70px;
+  }
+  .ticket-body p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+  .ticket-body h4 {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 12px 0 6px;
+  }
+  .ticket-body ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ticket-body li {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .ticket-body li::before {
+    content: '□';
+    font-family: var(--mono);
+    color: var(--dim);
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 11px;
+  }
+  .dep {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dim);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .gap-flag {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--advanced);
+    background: var(--advanced-dim);
+    border: 1px solid rgba(200,88,120,0.3);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: 4px;
+  }
+
+  /* Epic color themes */
+  .epic-bronze .ticket::before { background: var(--bronze); }
+  .epic-bronze .epic-tag { background: var(--bronze-dim); color: var(--bronze); }
+  .epic-bronze .ticket-id { color: var(--bronze); opacity: 0.7; }
+
+  .epic-silver .ticket::before { background: var(--silver); }
+  .epic-silver .epic-tag { background: var(--silver-dim); color: var(--silver); }
+  .epic-silver .ticket-id { color: var(--silver); opacity: 0.7; }
+
+  .epic-gold .ticket::before { background: var(--gold); }
+  .epic-gold .epic-tag { background: var(--gold-dim); color: var(--gold); }
+  .epic-gold .ticket-id { color: var(--gold); opacity: 0.7; }
+
+  .epic-infra .ticket::before { background: var(--infra); }
+  .epic-infra .epic-tag { background: var(--infra-dim); color: var(--infra); }
+  .epic-infra .ticket-id { color: var(--infra); opacity: 0.7; }
+
+  .epic-dashboard .ticket::before { background: var(--dashboard); }
+  .epic-dashboard .epic-tag { background: var(--dashboard-dim); color: var(--dashboard); }
+  .epic-dashboard .ticket-id { color: var(--dashboard); opacity: 0.7; }
+
+  .epic-advanced .ticket::before { background: var(--advanced); }
+  .epic-advanced .epic-tag { background: var(--advanced-dim); color: var(--advanced); }
+  .epic-advanced .ticket-id { color: var(--advanced); opacity: 0.7; }
+
+  /* expand chevron */
+  .chevron {
+    font-size: 10px;
+    color: var(--dim);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    margin-top: 2px;
+  }
+  .ticket.open .chevron { transform: rotate(90deg); }
+
+  /* hidden state */
+  .ticket.hidden { display: none; }
+
+  /* ── DONE STATE ── */
+  .ticket.done {
+    opacity: 0.45;
+    background: var(--bg);
+  }
+  .ticket.done::before { opacity: 0.3; }
+  .ticket.done .ticket-title {
+    text-decoration: line-through;
+    color: var(--dim);
+  }
+  .ticket.done .done-btn {
+    background: rgba(80,200,120,0.18);
+    border-color: rgba(80,200,120,0.5);
+    color: #50c878;
+  }
+  .ticket.done .done-btn::before { content: '✓ '; }
+
+  .done-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 9px;
+    border-radius: 3px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+  .done-btn:hover {
+    border-color: #50c878;
+    color: #50c878;
+    background: rgba(80,200,120,0.1);
+  }
+
+  /* epic progress bar */
+  .epic-progress {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 10px;
+    margin-bottom: 2px;
+    overflow: hidden;
+    width: 120px;
+  }
+  .epic-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: #50c878;
+    transition: width 0.3s ease;
+  }
+  .epic-progress-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--dim);
+  }
+  .epic-progress-label.all-done { color: #50c878; }
+
+  /* stats bar */
+  .stats {
+    display: flex;
+    gap: 24px;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-val { font-family: var(--mono); font-size: 18px; font-weight: 600; color: var(--text); }
+  .stat-label { font-size: 11px; color: var(--dim); font-family: var(--mono); }
+
+  @media (max-width: 700px) {
+    header, .filter-bar, .legend, main, .stats { padding-left: 16px; padding-right: 16px; }
+    .tickets { grid-template-columns: 1fr; }
+    .epic-desc { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">STR-PROJ</span>
+  <div class="header-sep"></div>
+  <span class="header-title">Strava Data Engineering — Sprint Board</span>
+  <div class="header-right">
+    <span class="total-badge" id="visible-count">30 tickets</span>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat"><span class="stat-val">30</span><span class="stat-label">total tickets</span></div>
+  <div class="stat"><span class="stat-val">6</span><span class="stat-label">epics</span></div>
+  <div class="stat"><span class="stat-val">~14</span><span class="stat-label">weeks estimated</span></div>
+  <div class="stat"><span class="stat-val">12</span><span class="stat-label">gap-identified</span></div>
+  <div class="stat" style="margin-left:auto">
+    <span class="stat-val" id="done-count" style="color:#50c878">0</span>
+    <span class="stat-label" style="color:#50c878">completed</span>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">EPIC</span>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="epic-bronze">Bronze</button>
+  <button class="filter-btn" data-filter="epic-silver">Silver</button>
+  <button class="filter-btn" data-filter="epic-gold">Gold</button>
+  <button class="filter-btn" data-filter="epic-infra">Infra</button>
+  <button class="filter-btn" data-filter="epic-dashboard">Dashboard</button>
+  <button class="filter-btn" data-filter="epic-advanced">Advanced</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">STATUS</span>
+  <button class="filter-btn" data-filter="done">✓ Done</button>
+  <button class="filter-btn" data-filter="not-done">In Progress</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">PRIORITY</span>
+  <button class="filter-btn" data-filter="p1">P1 Critical</button>
+  <button class="filter-btn" data-filter="p2">P2 High</button>
+  <button class="filter-btn" data-filter="p3">P3 Normal</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--bronze)"></div>Bronze — raw ingestion</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--silver)"></div>Silver — clean & validate</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Gold — aggregations</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--infra)"></div>Infra — project setup</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--dashboard)"></div>Dashboard — Streamlit</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--advanced)"></div>Advanced — features</div>
+  <div class="legend-item" style="margin-left:auto">
+    <div class="legend-dot" style="background:var(--advanced); opacity:0.6"></div>
+    <span style="color:var(--advanced)">gap-identified</span> = from gap analysis
+  </div>
+</div>
+
+<main id="board">
+
+<!-- ═══════════════════════════════════════════════
+     EPIC 0 — INFRA
+════════════════════════════════════════════════ -->
+<div class="epic epic-infra" data-epic="epic-infra">
+  <div class="epic-header">
+    <span class="epic-tag">INFRA</span>
+    <span class="epic-title">Project Setup & Infrastructure</span>
+    <span class="epic-desc">Repo, dependencies, folder structure, logging</span>
+    <span class="epic-count">5 tickets · Weeks 1</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:12px">
+      <div class="epic-progress"><div class="epic-progress-fill" style="width:0%"></div></div>
+      <span class="epic-progress-label">0 / 5</span>
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 1 — Foundation</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-infra" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">INF-001</span>
+          <span class="ticket-title">Initialise repo and folder structure (medallion layout)</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">setup</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Create the full folder structure as agreed: data/raw, data/bronze, data/silver, data/gold, data/failed, pipeline/, parsers/, app/, tests/, config/, logs/, notebooks/.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>All directories exist with .gitkeep where empty</li>
+            <li>README.md created with setup instructions</li>
+            <li>.gitignore covers data/, *.parquet, *.pyc, .env</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-infra" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">INF-002</span>
+          <span class="ticket-title">Create requirements.txt and verify all dependencies install</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">setup</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 1h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Pin all dependencies (gpxpy, fitparse, duckdb, pandas, pyarrow, pandera, folium, plotly, altair, streamlit, scikit-learn, stravalib, pytest, loguru, pyyaml). Run pip install and confirm clean environment.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>requirements.txt committed with pinned versions</li>
+            <li>pip install -r requirements.txt runs with no errors on a clean venv</li>
+            <li>All imports verifiable with a smoke-test script</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-infra" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">INF-003</span>
+          <span class="ticket-title">Set up centralised logging module (loguru)</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">infra</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Create pipeline/utils/logger.py using loguru. Log INFO for files processed and rows written, WARNING for missing optional fields, ERROR for parse failures with full traceback. Rotate logs daily into logs/.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>logger.py importable by all pipeline scripts</li>
+            <li>Logs written to logs/pipeline_YYYYMMDD.log</li>
+            <li>Console output formatted cleanly</li>
+            <li>Log level configurable via config/settings.yaml</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-infra" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">INF-004</span>
+          <span class="ticket-title">Create config/settings.yaml and config loader</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">infra</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 1h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Centralise all configurable values: raw data path, batch size, log level, Parquet output paths, max map points. Load via pyyaml in a shared config.py helper.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>settings.yaml contains all env-specific paths and tuning values</li>
+            <li>config.py loads and exposes typed attributes</li>
+            <li>All pipeline scripts import from config, not hardcoded paths</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-infra" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">INF-005</span>
+          <span class="ticket-title">Set up pytest with fixture directory and CI smoke test</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">testing</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Configure pytest. Add a tests/fixtures/ directory with one sample GPX, one FIT, and one GZ file (anonymised). Write a smoke test that imports all parsers and asserts they are callable.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>pytest runs from repo root with no config errors</li>
+            <li>Fixture files committed to tests/fixtures/</li>
+            <li>Smoke test passes</li>
+            <li>Coverage configured (pytest-cov)</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     EPIC 1 — BRONZE
+════════════════════════════════════════════════ -->
+<div class="epic epic-bronze" data-epic="epic-bronze">
+  <div class="epic-header">
+    <span class="epic-tag">BRONZE</span>
+    <span class="epic-title">Raw Ingestion Layer</span>
+    <span class="epic-desc">Parse GPX / FIT / GZ → write raw Parquet to bronze/</span>
+    <span class="epic-count">7 tickets · Weeks 1–3</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:12px">
+      <div class="epic-progress"><div class="epic-progress-fill" style="width:0%"></div></div>
+      <span class="epic-progress-label">0 / 7</span>
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 1 — GPX Parser (first deliverable)</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-bronze" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">BRZ-001</span>
+          <span class="ticket-title">Implement parse_gpx.py — extract all available fields</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Use gpxpy to parse GPX files. Extract: timestamp, lat, lon, elevation, speed, distance, heart_rate, cadence. Return a pandas DataFrame with one row per trackpoint. Handle missing extensions gracefully (nullable fields).</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>parse_gpx(filepath) returns a DataFrame with correct dtypes</li>
+            <li>Missing HR / cadence columns are None, not errors</li>
+            <li>Tested with at least 2 fixture GPX files</li>
+            <li>Activity metadata (title, type, start time) also extracted</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">INF-001</span> <span class="dep">INF-005</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-bronze" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">BRZ-002</span>
+          <span class="ticket-title">Visualise a single parsed GPX route (notebook)</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">exploration</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>In notebooks/exploration.ipynb, call parse_gpx on a real file and render the route using folium. Confirm lat/lon values are sane, elevation profile makes sense, and the map loads in the notebook.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Notebook renders without errors</li>
+            <li>Route displays on an interactive folium map</li>
+            <li>Elevation plotted as a line chart below the map</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-001</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 2 — FIT & GZ Parsers</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-bronze" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">BRZ-003</span>
+          <span class="ticket-title">Implement parse_fit.py — including advanced FIT fields</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 5h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Use fitparse to extract all FIT fields: timestamp, lat/lon, elevation, speed, HR, cadence, power, stride_length, vertical_oscillation, temperature, calories, vo2_max. These must NOT be dropped (identified gap in original schema).</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>All FIT fields captured and returned in DataFrame</li>
+            <li>FIT semicircle coordinates converted to decimal degrees</li>
+            <li>FIT-only fields stored as nullable columns</li>
+            <li>Unit tests cover at least one real FIT fixture</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">INF-001</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-bronze" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">BRZ-004</span>
+          <span class="ticket-title">Implement parse_gz.py with auto content-type detection</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 3h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Decompress GZ and detect inner file type using python-magic. Route to parse_gpx or parse_fit accordingly. Handle the case where content type is unknown — log a warning and move to data/failed/.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>GZ containing GPX is correctly parsed as GPX</li>
+            <li>GZ containing FIT is correctly parsed as FIT</li>
+            <li>Unknown content types produce a WARNING log and skip gracefully</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-001</span> <span class="dep">BRZ-003</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 3 — Ingestion Pipeline</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-bronze" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">BRZ-005</span>
+          <span class="ticket-title">Build bronze_ingest.py — batch ingestion with manifest tracking</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 5h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Orchestrates ingestion of all files in data/raw/. Uses manifest.json to skip already-processed files (incremental loading). Processes in configurable batches. On success, writes Parquet to data/bronze/. On failure, moves file to data/failed/ and logs error.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Processes all 3 file types (GPX, FIT, GZ)</li>
+            <li>Re-running the script does not reprocess already-ingested files</li>
+            <li>Failed files quarantined, not silently dropped</li>
+            <li>Batch size configurable via settings.yaml</li>
+            <li>Summary log printed on completion: X parsed, Y failed</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-001</span> <span class="dep">BRZ-003</span> <span class="dep">BRZ-004</span> <span class="dep">INF-003</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-bronze" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">BRZ-006</span>
+          <span class="ticket-title">Create data dictionary from parsed fields</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">docs</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>After parsing a sample of real files, document every field: name, type, nullable, source (GPX/FIT/GZ), description, units. Output as data_dictionary.md in the repo root.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>All fields from GPX and FIT documented</li>
+            <li>Nullable vs required clearly indicated</li>
+            <li>Units specified for numeric fields (m/s, bpm, metres)</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-005</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-bronze" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">BRZ-007</span>
+          <span class="ticket-title">Write unit tests for all three parsers</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">testing</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 3h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Write pytest tests for parse_gpx, parse_fit, and parse_gz. Cover: normal parse, missing optional fields, corrupt/empty file handling, coordinate type correctness.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>At least 3 tests per parser</li>
+            <li>Tests run in under 10 seconds</li>
+            <li>Coverage on parsers/ ≥ 80%</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-001</span> <span class="dep">BRZ-003</span> <span class="dep">BRZ-004</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     EPIC 2 — SILVER
+════════════════════════════════════════════════ -->
+<div class="epic epic-silver" data-epic="epic-silver">
+  <div class="epic-header">
+    <span class="epic-tag">SILVER</span>
+    <span class="epic-title">Clean & Validate Layer</span>
+    <span class="epic-desc">Enforce unified schema, validate data quality, quarantine bad records</span>
+    <span class="epic-count">5 tickets · Weeks 3–5</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:12px">
+      <div class="epic-progress"><div class="epic-progress-fill" style="width:0%"></div></div>
+      <span class="epic-progress-label">0 / 5</span>
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 3–4 — Schema & Validation</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-silver" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">SLV-001</span>
+          <span class="ticket-title">Define extended unified schema (including all FIT fields)</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">design</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>The original schema dropped power, stride_length, vertical_oscillation, temperature, calories, vo2_max. Define the full extended schema as a pandera SchemaModel with correct dtypes and nullable flags for all optional fields.</p>
+          <h4>Schema fields</h4>
+          <ul>
+            <li>activity_id, activity_type, source_file, ingested_at (required)</li>
+            <li>timestamp, lat, lon, elevation, speed, distance (required)</li>
+            <li>heart_rate, cadence, power, stride_length (nullable)</li>
+            <li>vertical_oscillation, temperature, calories, vo2_max (nullable)</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-006</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-silver" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">SLV-002</span>
+          <span class="ticket-title">Build silver_transform.py — clean, cast, and validate</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 5h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Reads bronze/, applies the unified schema, casts types, handles nulls, validates with pandera. Writes clean records to data/silver/. Writes failed/invalid rows to data/silver/validation_errors.parquet with a reason column.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>All bronze Parquet files processed</li>
+            <li>Pandera validation runs on output; schema errors captured not raised</li>
+            <li>Coordinate range check: lat -90/90, lon -180/180</li>
+            <li>Zero-distance or zero-duration activities flagged</li>
+            <li>Incremental — only processes new bronze files</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">SLV-001</span> <span class="dep">BRZ-005</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-silver" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">SLV-003</span>
+          <span class="ticket-title">Add null-field handling strategy for activities without sensors</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Activities without a heart rate monitor, power meter, or GPS should not fail the pipeline. Define a null-handling policy and add a data_completeness score (0–1) to each activity summary indicating how many optional fields were captured.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Activities with no HR pass silver without errors</li>
+            <li>data_completeness field added to silver schema</li>
+            <li>Post-transform log shows field coverage stats per batch</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">SLV-002</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-silver" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">SLV-004</span>
+          <span class="ticket-title">GPS point downsampling with RDP algorithm</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 3h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Long activities can have 10,000+ GPS points, which breaks map rendering. Apply the Ramer-Douglas-Peucker algorithm in silver to reduce route geometry to a configurable max points (default: 2000) while preserving shape fidelity.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Route geometry downsampled in silver Parquet</li>
+            <li>Original full-resolution data preserved in bronze</li>
+            <li>Max points configurable in settings.yaml</li>
+            <li>Visual check: downsampled route looks correct on a map</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">SLV-002</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-silver" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">SLV-005</span>
+          <span class="ticket-title">Write silver schema tests with pandera</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">testing</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Write tests/test_silver_schema.py. Assert that the silver output conforms to the pandera schema, required fields are never null, coordinate ranges are valid, and validation_errors.parquet captures known bad rows.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Tests pass on a clean run of silver_transform.py</li>
+            <li>Intentionally bad fixture produces expected error rows</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">SLV-002</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     EPIC 3 — GOLD
+════════════════════════════════════════════════ -->
+<div class="epic epic-gold" data-epic="epic-gold">
+  <div class="epic-header">
+    <span class="epic-tag">GOLD</span>
+    <span class="epic-title">Aggregation & Presentation Layer</span>
+    <span class="epic-desc">Build dashboard-ready datasets from silver — summaries, trends, geometry</span>
+    <span class="epic-count">4 tickets · Weeks 5–7</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:12px">
+      <div class="epic-progress"><div class="epic-progress-fill" style="width:0%"></div></div>
+      <span class="epic-progress-label">0 / 4</span>
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 5–6 — Gold Aggregations</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-gold" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">GLD-001</span>
+          <span class="ticket-title">Build gold_aggregate.py — per-activity summaries</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Reads silver/, computes per-activity summary: total distance, moving time, elapsed time, avg/max HR, avg pace, elevation gain, effort score, activity type, start location. Writes to gold/activity_summaries.parquet.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>One row per activity in activity_summaries.parquet</li>
+            <li>All computed metrics correct against a known test activity</li>
+            <li>Effort score = avg_hr × duration_min × elevation_gain</li>
+            <li>Incremental — only processes new silver files</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">SLV-002</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-gold" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">GLD-002</span>
+          <span class="ticket-title">Build weekly and monthly aggregates</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 3h</span>
+        </div>
+        <div class="ticket-body">
+          <p>From gold summaries, compute weekly and monthly rollups: total distance, total elevation, activity count, avg pace, avg HR. Writes to gold/weekly_aggregates.parquet and gold/monthly_aggregates.parquet.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Weekly and monthly tables correct for test data</li>
+            <li>Handles gaps in activity history gracefully (sparse weeks = 0 not null)</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-001</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-gold" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">GLD-003</span>
+          <span class="ticket-title">Build route geometry table for heatmap</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 3h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Extract lat/lon arrays from silver (using downsampled geometry from SLV-004). Store as gold/route_geometries.parquet with activity_id and activity_type. Used as the sole input for heatmap and map rendering.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>route_geometries.parquet loadable and renderable in folium</li>
+            <li>Each route has &lt;= configured max GPS points</li>
+            <li>activity_type column present for filtered heatmaps</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">SLV-004</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-gold" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">GLD-004</span>
+          <span class="ticket-title">Create run_pipeline.py — orchestrate all three layers</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 2h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Single entry point: python run_pipeline.py runs bronze → silver → gold in sequence, with --layer flag to run individual layers. Prints a summary on completion.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>python run_pipeline.py runs end-to-end without errors</li>
+            <li>--layer bronze|silver|gold flag works</li>
+            <li>--dry-run flag prints what would be processed without writing</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-005</span> <span class="dep">SLV-002</span> <span class="dep">GLD-001</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     EPIC 4 — DASHBOARD
+════════════════════════════════════════════════ -->
+<div class="epic epic-dashboard" data-epic="epic-dashboard">
+  <div class="epic-header">
+    <span class="epic-tag">DASHBOARD</span>
+    <span class="epic-title">Streamlit Dashboard</span>
+    <span class="epic-desc">Multi-page dashboard consuming gold layer exclusively</span>
+    <span class="epic-count">6 tickets · Weeks 7–11</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:12px">
+      <div class="epic-progress"><div class="epic-progress-fill" style="width:0%"></div></div>
+      <span class="epic-progress-label">0 / 6</span>
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 7–8 — Core Shell & Activity List</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-dashboard" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">DSH-001</span>
+          <span class="ticket-title">Set up multi-page Streamlit app with cached data loading</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Scaffold the multi-page app (pages/ directory). Implement @st.cache_data for gold Parquet loading so data is not reread on every interaction. Build the sidebar with all filters: activity type, date range, distance, duration, HR zone, elevation gain.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>App launches with streamlit run app/streamlit_app.py</li>
+            <li>All sidebar filters working and applied to all pages</li>
+            <li>HR zone and elevation gain filters added (gap item)</li>
+            <li>Data loads only once per session via st.cache_data</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-001</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-dashboard" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">DSH-002</span>
+          <span class="ticket-title">Build overview page — activity list and summary stats</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Page 01_overview.py: sortable activity table (title, date, type, distance, duration, pace, HR). KPI row at top showing totals. Clicking a row navigates to the activity detail page.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Activity table renders with correct columns</li>
+            <li>Filters from sidebar correctly narrow the table</li>
+            <li>KPIs update on filter change</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">DSH-001</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 8–9 — Activity Detail & Maps</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-dashboard" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">DSH-003</span>
+          <span class="ticket-title">Build activity detail page — map + time-series charts</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 6h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Page 02_activity_detail.py. Shows: route map (coloured by speed/HR/elevation), metric cards (avg HR, max HR, pace, elevation gain), and time-series charts — pace over distance, HR over distance, elevation profile. These charts were entirely missing from the original plan.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Route map renders from silver GPS data</li>
+            <li>Colour mode selector: speed / HR / elevation</li>
+            <li>Pace, HR, elevation charts rendered with plotly</li>
+            <li>Charts only shown when the relevant data is present</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">DSH-002</span> <span class="dep">GLD-003</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-dashboard" data-priority="p1" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">DSH-004</span>
+          <span class="ticket-title">Build heatmap page — global and activity-type filtered</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p1">P1</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Page 03_heatmap.py. Renders all route geometries from gold/route_geometries.parquet as a heatmap using folium. Toggle between all activities, runs only, rides only. GPS points capped at configured max to avoid browser lock.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Heatmap renders for all activities combined</li>
+            <li>Activity type filter toggles correctly</li>
+            <li>Map does not freeze with large datasets</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-003</span> <span class="dep">DSH-001</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 10–11 — Trends</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-dashboard" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">DSH-005</span>
+          <span class="ticket-title">Build trends page — weekly/monthly charts</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Page 04_trends.py. Charts: weekly distance bar chart, monthly volume area chart, pace trend over time, HR trend over time, calendar heatmap (activity frequency). All charts use altair or plotly.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>All 5 charts render from gold/weekly_aggregates.parquet</li>
+            <li>Date range filter from sidebar applies</li>
+            <li>Activity type filter applies</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-002</span> <span class="dep">DSH-001</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-dashboard" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">DSH-006</span>
+          <span class="ticket-title">Performance audit and loading state polish</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">perf</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 3h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Profile the dashboard with a realistic dataset. Add st.spinner on heavy operations. Confirm st.cache_data is working. Check map rendering time with max-point cap. Ensure filter interactions are under 1s.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Initial load under 3s for up to 500 activities</li>
+            <li>Spinners visible on all heavy operations</li>
+            <li>No uncached data reloads on filter change</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">DSH-003</span> <span class="dep">DSH-004</span> <span class="dep">DSH-005</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     EPIC 5 — ADVANCED
+════════════════════════════════════════════════ -->
+<div class="epic epic-advanced" data-epic="epic-advanced">
+  <div class="epic-header">
+    <span class="epic-tag">ADVANCED</span>
+    <span class="epic-title">Advanced Features & Analytics</span>
+    <span class="epic-desc">PRs, effort score, streaks, classification, Strava API</span>
+    <span class="epic-count">8 tickets · Weeks 11–14</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:12px">
+      <div class="epic-progress"><div class="epic-progress-fill" style="width:0%"></div></div>
+      <span class="epic-progress-label">0 / 8</span>
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 11–12 — Analytics Features</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-001</span>
+          <span class="ticket-title">Personal records tracker (fastest 5K, 10K, longest, best pace)</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Compute PRs from gold summaries: fastest 5K, 10K, half-marathon, marathon segment; longest single activity; best average pace; highest single-session elevation gain. Write to gold/personal_records.parquet. Display on a PR page in the dashboard.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>PRs correctly identified from activity data</li>
+            <li>PR page shows all-time records with date and activity link</li>
+            <li>Records update automatically when new activities are ingested</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-001</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-002</span>
+          <span class="ticket-title">Streak tracker — longest and current activity streaks</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 3h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Compute: current activity streak (consecutive days with at least one activity), longest-ever streak. Display on trends page with a calendar heatmap showing active/inactive days.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Streak computed correctly including today</li>
+            <li>Calendar heatmap shows activity density per day</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-002</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p2" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-003</span>
+          <span class="ticket-title">Route reuse detection — identify frequently repeated routes</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p2">P2</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 5h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Use start/end coordinates and total distance to cluster similar routes. Group activities by route cluster. Show "your most-run route" with performance history across runs of the same route.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Route clusters identified for activities with similar start/end/distance</li>
+            <li>Top 5 most-repeated routes shown on a dedicated map</li>
+            <li>Pace trend over time displayed per route cluster</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-003</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p3" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-004</span>
+          <span class="ticket-title">Activity type classifier using speed and cadence</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p3">P3</span>
+          <span class="type-tag">ml</span>
+          <span class="effort"><span>est.</span> 5h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Train a simple scikit-learn classifier (e.g. RandomForest) on avg speed, cadence, elevation gain rate to predict activity type when the source file metadata is missing or ambiguous. Evaluate on labelled holdout.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Classifier trained on labelled activities</li>
+            <li>Accuracy ≥ 85% on holdout set</li>
+            <li>Predicted type stored in silver as predicted_activity_type</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">SLV-002</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sprint-group">
+    <div class="sprint-label">Week 13–14 — Segment & API</div>
+    <div class="tickets">
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p3" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-005</span>
+          <span class="ticket-title">Segment analysis — uphill vs downhill performance, sprint detection</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p3">P3</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 6h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Split each activity into gradient segments (uphill/flat/downhill) based on elevation change per 100m. Compute pace and HR for each segment type. Detect sprints as sections with pace significantly faster than activity average.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Segment splits computed and stored in gold</li>
+            <li>Avg pace per segment type shown on detail page</li>
+            <li>Sprint sections highlighted on route map</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">DSH-003</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p3" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-006</span>
+          <span class="ticket-title">Fatigue and recovery score over time</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p3">P3</span>
+          <span class="type-tag">feature</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Implement a rolling training load model (ATL/CTL/TSB — acute vs chronic training load) using effort score as the load metric. Display on trends page as a fatigue/form chart.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>ATL (7-day rolling), CTL (42-day rolling), TSB computed</li>
+            <li>Chart displayed on trends page</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-002</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p3" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-007</span>
+          <span class="ticket-title">Strava API OAuth setup and activity stream ingestion</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p3">P3</span>
+          <span class="type-tag">feature</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 8h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Implement Strava OAuth 2.0 using stravalib. Store access/refresh tokens securely. Fetch activity streams (GPS, HR, power data) via the streams endpoint. Respect rate limits: 100 req/15min, 1000 req/day. Store results in raw/ and run through the medallion pipeline.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>OAuth flow completes and tokens stored in .env (not committed)</li>
+            <li>Token refresh handled automatically on expiry</li>
+            <li>Rate limit respected with exponential backoff</li>
+            <li>Fetched activities ingested through bronze → silver → gold</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">BRZ-005</span>
+        </div>
+      </div>
+
+      <div class="ticket" data-epic="epic-advanced" data-priority="p3" onclick="toggle(this)">
+        <div class="ticket-top">
+          <span class="ticket-id">ADV-008</span>
+          <span class="ticket-title">Integration test — full pipeline end-to-end on real dataset</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="priority p3">P3</span>
+          <span class="type-tag">testing</span>
+          <span class="gap-flag">gap</span>
+          <span class="effort"><span>est.</span> 4h</span>
+        </div>
+        <div class="ticket-body">
+          <p>Run the full pipeline on a realistic sample (50+ activities across file types). Verify bronze → silver → gold produces correct row counts, no silent data loss, and dashboard loads without errors.</p>
+          <h4>Acceptance criteria</h4>
+          <ul>
+            <li>Pipeline runs end-to-end without errors</li>
+            <li>Row counts reconcile across all three layers</li>
+            <li>Dashboard loads all pages without errors</li>
+            <li>No activities silently lost (total in gold = total parseable in raw)</li>
+          </ul>
+          <h4>Dependencies</h4>
+          <span class="dep">GLD-004</span> <span class="dep">DSH-006</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── Persistence ──────────────────────────────────────────────
+const STORAGE_KEY = 'strava-board-done';
+
+function loadDone() {
+  try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function saveDone(set) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
+}
+
+let doneSet = loadDone();
+
+// ── Toggle expand ─────────────────────────────────────────────
+function toggle(el) {
+  // Don't toggle expand when clicking the done button
+  if (event.target.classList.contains('done-btn')) return;
+  el.classList.toggle('open');
+}
+
+// ── Mark done ────────────────────────────────────────────────
+function markDone(btn, event) {
+  event.stopPropagation();
+  const ticket = btn.closest('.ticket');
+  const id = ticket.querySelector('.ticket-id').textContent.trim();
+
+  if (doneSet.has(id)) {
+    doneSet.delete(id);
+    ticket.classList.remove('done');
+    btn.textContent = 'Mark done';
+  } else {
+    doneSet.add(id);
+    ticket.classList.add('done');
+    btn.textContent = 'Done';
+  }
+
+  saveDone(doneSet);
+  updateDoneCount();
+  updateEpicProgress();
+  applyFilters();
+}
+
+// ── Inject done buttons into every ticket ────────────────────
+function injectDoneButtons() {
+  document.querySelectorAll('.ticket').forEach(ticket => {
+    const id = ticket.querySelector('.ticket-id').textContent.trim();
+    const meta = ticket.querySelector('.ticket-meta');
+
+    const btn = document.createElement('button');
+    btn.className = 'done-btn';
+    btn.textContent = doneSet.has(id) ? 'Done' : 'Mark done';
+    btn.onclick = (e) => markDone(btn, e);
+    meta.appendChild(btn);
+
+    if (doneSet.has(id)) ticket.classList.add('done');
+  });
+}
+
+// ── Stats counter ─────────────────────────────────────────────
+function updateDoneCount() {
+  document.getElementById('done-count').textContent = doneSet.size;
+}
+
+// ── Epic progress bars ────────────────────────────────────────
+function updateEpicProgress() {
+  document.querySelectorAll('.epic').forEach(epic => {
+    const all = epic.querySelectorAll('.ticket');
+    const done = epic.querySelectorAll('.ticket.done');
+    const total = all.length;
+    const count = done.length;
+    const pct = total ? Math.round((count / total) * 100) : 0;
+
+    const fill = epic.querySelector('.epic-progress-fill');
+    const label = epic.querySelector('.epic-progress-label');
+    if (fill) fill.style.width = pct + '%';
+    if (label) {
+      label.textContent = count + ' / ' + total;
+      label.classList.toggle('all-done', count === total && total > 0);
+    }
+  });
+}
+
+// ── Filters ──────────────────────────────────────────────────
+let activeEpic = 'all';
+let activePriority = 'all';
+let activeStatus = 'all';
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = btn.dataset.filter;
+    const isEpic = f === 'all' || f.startsWith('epic-');
+    const isPriority = ['p1','p2','p3'].includes(f);
+    const isStatus = ['done','not-done'].includes(f);
+
+    if (isEpic) {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        if (b.dataset.filter === 'all' || b.dataset.filter.startsWith('epic-')) b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      activeEpic = f;
+    } else if (isPriority) {
+      if (btn.classList.contains('active')) {
+        btn.classList.remove('active');
+        activePriority = 'all';
+      } else {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          if (['p1','p2','p3'].includes(b.dataset.filter)) b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        activePriority = f;
+      }
+    } else if (isStatus) {
+      if (btn.classList.contains('active')) {
+        btn.classList.remove('active');
+        activeStatus = 'all';
+      } else {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          if (['done','not-done'].includes(b.dataset.filter)) b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        activeStatus = f;
+      }
+    }
+
+    applyFilters();
+  });
+});
+
+function applyFilters() {
+  let visible = 0;
+  document.querySelectorAll('.ticket').forEach(t => {
+    const epicMatch = activeEpic === 'all' || t.dataset.epic === activeEpic;
+    const priorityMatch = activePriority === 'all' || t.dataset.priority === activePriority;
+    const isDone = t.classList.contains('done');
+    const statusMatch = activeStatus === 'all'
+      || (activeStatus === 'done' && isDone)
+      || (activeStatus === 'not-done' && !isDone);
+
+    if (epicMatch && priorityMatch && statusMatch) {
+      t.classList.remove('hidden');
+      visible++;
+    } else {
+      t.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('visible-count').textContent = visible + ' ticket' + (visible !== 1 ? 's' : '');
+
+  document.querySelectorAll('.epic').forEach(epic => {
+    const vis = epic.querySelectorAll('.ticket:not(.hidden)');
+    epic.style.display = vis.length === 0 ? 'none' : '';
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────
+injectDoneButtons();
+updateDoneCount();
+updateEpicProgress();
+applyFilters();
+</script>
+</body>
+</html>
