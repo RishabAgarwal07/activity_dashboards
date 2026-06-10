@@ -16,3 +16,7 @@ max_retries: 3
 retry_delay: 5 # seconds
 batch_size: 100
 max_map_points: 2000
+
+# Parse configurations
+d: "http://www.topografix.com/GPX/1/1"
+gpxtpx: "http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
