@@ -67,8 +67,3 @@ def parse_gpx(file_path) -> tuple[pd.DataFrame, dict]:
     print(metadata)
 
     return df, metadata
-
-
-if __name__ == "__main__":
-    file_path = r"/Users/rishabagarwal/Desktop/projects/activity_dashboards/tests/fixtures/8335406398.gpx"
-    parse_gpx(file_path)
