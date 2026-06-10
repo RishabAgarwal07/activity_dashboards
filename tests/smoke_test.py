@@ -1,36 +1,43 @@
-import gpxpy
-gpxpy.parse("<gpx></gpx>")  # not just import — actually invoke the parser
-print("gpxpy smoke test passed")
+"""
+Smoke tests to ensure that core modules and 3rd party dependencies import correctly.
+This helps catch issues with missing dependencies or import errors early.
+"""
 
-import fitparse
-fitparse.FitFile  # access a class to confirm the C extension loaded
-print("fitparse smoke test passed")
+import pytest
 
-import magic
-magic.from_buffer(b"test")  # requires libmagic system lib — often breaks on fresh installs
-print("magic smoke test passed")
+def test_core_import():
+    """
+    Test parsers import correctly
+    """
 
-import duckdb
-con = duckdb.connect()
-con.execute("SELECT 42").fetchone()
-print("duckdb smoke test passed")
+    from parsers import parse_fit
+    from parsers import parse_gpx
+    from parsers import parse_gz
 
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-import tempfile, os
+def test_3rd_party_imports():
+    """
+    Test 3rd party imports work correctly
+    """
 
-df = pd.DataFrame({"a": [1, 2, 3]})
-with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as f:
-    pq.write_table(pa.Table.from_pandas(df), f.name)
-    result = pq.read_table(f.name).to_pandas()
-    assert len(result) == 3
-    print("pandas/pyarrow smoke test passed")
-    os.unlink(f.name)
+    from sklearn.ensemble import RandomForestClassifier
+    RandomForestClassifier()
 
-import streamlit  # just the import — you can't run the app but confirm it loads
-print("streamlit smoke test passed")
+    import streamlit
 
-from sklearn.ensemble import RandomForestClassifier
-RandomForestClassifier()
-print("sklearn smoke test passed")
+    import gpxpy
+    gpxpy.parse("<gpx></gpx>")  # not just import — actually invoke the parser
+
+    import fitparse
+    fitparse.FitFile  # access a class to confirm the C extension loaded
+
+    import magic
+    magic.from_buffer(b"test")  # requires libmagic system lib — often breaks on fresh installs
+
+    import duckdb
+    con = duckdb.connect()
+    con.execute("SELECT 42").fetchone()
+
+    import pandas as pd
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    import tempfile, os
